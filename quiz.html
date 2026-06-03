@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>퀴즈 시험</title>
+<style>
+  :root{
+    --purple-bg:#f5f3ff; --purple:#7c3aed; --purple-dark:#5b21b6; --purple-soft:#ede9fe;
+    --green-bg:#E1F5EE; --green:#0f9d77; --green-dark:#0b7a5d;
+    --orange-bg:#FAEEDA; --orange:#c97e1a;
+    --red-bg:#fde8e8; --red:#dc2626;
+    --ink:#1e1b4b; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb; --card:#fff; --bg:#f8fafc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.65;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .wrap{max-width:860px;margin:0 auto;padding:24px 18px 60px;}
+  .header{background:var(--purple-bg);border:1px solid var(--purple-soft);border-radius:18px;padding:28px;margin-bottom:20px;}
+  .header .label{font-size:12px;letter-spacing:2.5px;font-weight:700;color:var(--purple);margin-bottom:8px;}
+  .header h1{font-size:28px;color:var(--ink);font-weight:800;letter-spacing:-0.5px;}
+  .header .sub{margin-top:6px;font-size:14px;color:var(--muted);}
+  .header .instr{margin-top:14px;font-size:14px;color:#4b5563;background:#fff;border:1px dashed var(--purple-soft);border-radius:10px;padding:10px 14px;}
+  .info-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  .info-card .ct{font-size:13px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:14px;}
+  .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px;font-weight:600;}
+  .field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;}
+  .field input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-soft);}
+  .progress-wrap{position:sticky;top:0;z-index:20;background:rgba(248,250,252,.92);backdrop-filter:blur(6px);padding:12px 2px;margin-bottom:14px;}
+  .progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+  .progress-row .t{font-size:13px;font-weight:700;color:var(--ink);}
+  .progress-row .c{font-size:13px;color:var(--purple);font-weight:700;}
+  .bar{height:9px;background:var(--purple-soft);border-radius:99px;overflow:hidden;}
+  .bar > i{display:block;height:100%;width:0;background:var(--purple);border-radius:99px;transition:width .25s ease;}
+  .q-card{background:var(--card);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);page-break-inside:avoid;}
+  .q-top{height:5px;background:var(--purple);}
+  .q-body{padding:20px 22px;}
+  .q-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .q-num{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--purple);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;}
+  .q-type{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--purple);background:var(--purple-soft);padding:3px 9px;border-radius:99px;}
+  .q-pts{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);}
+  .q-instr{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:6px;}
+  .q-stem{font-size:15.5px;color:var(--ink);line-height:1.75;margin-bottom:14px;}
+  .ans-area{margin-top:10px;} .ans-area > .lab{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;}
+  input.ans, textarea.ans{width:100%;font-family:inherit;font-size:15px;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:11px 13px;background:#fff;}
+  textarea.ans{resize:vertical;min-height:84px;line-height:1.7;}
+  input.ans:focus, textarea.ans:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-soft);}
+  .inline-blank{display:inline-block;width:96px;border:none;border-bottom:2px solid var(--purple);text-align:center;font-family:inherit;font-size:15px;color:var(--purple-dark);font-weight:700;background:transparent;padding:1px 4px;margin:0 3px;}
+  .inline-blank:focus{outline:none;border-bottom-color:var(--purple-dark);background:var(--purple-soft);}
+  .three-grid{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .three-grid .step{flex:1;min-width:120px;} .three-grid .arrow{color:var(--purple);font-weight:800;font-size:18px;}
+  .opt{display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px solid var(--border);border-radius:11px;margin-bottom:9px;cursor:pointer;transition:.15s;background:#fff;}
+  .opt:hover{border-color:var(--purple);background:var(--purple-bg);}
+  .opt input{width:18px;height:18px;accent-color:var(--purple);cursor:pointer;}
+  .opt.checked{border-color:var(--purple);background:var(--purple-bg);} .opt span{font-size:15px;color:var(--ink);}
+  .q-card.extra .q-top{background:var(--orange);} .q-card.extra{background:var(--orange-bg);border-color:#f0dcb8;}
+  .q-card.extra .q-num{background:var(--orange);} .q-card.extra .q-type{color:var(--orange);background:#f6e6cb;}
+  .q-card.extra .badge-extra{display:inline-block;font-size:11px;font-weight:700;color:#fff;background:var(--orange);padding:2px 8px;border-radius:99px;margin-left:auto;}
+  .q-card.extra textarea.ans{background:#fffdf8;border-color:#eed9b3;}
+  .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px;}
+  .btn{flex:1;min-width:200px;border:none;border-radius:12px;padding:15px 18px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .btn-submit{background:var(--purple);color:#fff;} .btn-submit:hover{background:var(--purple-dark);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  .toast{margin-top:16px;padding:13px 16px;border-radius:11px;font-size:14px;font-weight:600;display:none;}
+  .toast.ok{display:block;background:var(--green-bg);color:var(--green-dark);border:1px solid #b9e8d8;}
+  .toast.warn{display:block;background:var(--orange-bg);color:#a3640f;border:1px solid #f0dcb8;}
+  .toast.err{display:block;background:var(--red-bg);color:var(--red);border:1px solid #f6c5c5;}
+  .foot{margin-top:30px;text-align:center;font-size:12px;color:var(--muted);}
+  #results{display:none;margin-top:8px;}
+  .res-header{background:var(--purple-bg);border:1px solid var(--purple-soft);border-radius:18px;padding:28px;margin-bottom:18px;}
+  .res-header .label{font-size:12px;letter-spacing:2.5px;font-weight:700;color:var(--purple);margin-bottom:8px;}
+  .res-header h2{font-size:26px;color:var(--ink);font-weight:800;} .res-header .sub{margin-top:6px;font-size:14px;color:var(--muted);}
+  .sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+  .sum-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 18px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  .sum-card .k{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:8px;}
+  .sum-card .v{font-size:30px;font-weight:800;color:var(--ink);line-height:1.1;} .sum-card .vs{font-size:14px;color:var(--muted);font-weight:600;}
+  .sum-card.total{border-width:2px;} .sum-card.total .grade{display:inline-block;margin-top:8px;font-size:12px;font-weight:800;padding:3px 12px;border-radius:99px;}
+  .res-card{background:var(--card);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);page-break-inside:avoid;}
+  .res-card .rtop{height:5px;} .res-card .rbody{padding:18px 20px;}
+  .res-card .rhead{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .res-card .rnum{width:28px;height:28px;border-radius:8px;color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;}
+  .res-card .rstem{font-size:14px;color:var(--ink);font-weight:600;flex:1;} .res-card .rscore{margin-left:auto;font-size:14px;font-weight:800;white-space:nowrap;}
+  .mark{font-size:12px;font-weight:800;padding:3px 10px;border-radius:99px;}
+  .mark.o{background:var(--green-bg);color:var(--green-dark);} .mark.x{background:var(--red-bg);color:var(--red);} .mark.t{background:var(--orange-bg);color:#a3640f;}
+  .ans-row{font-size:14px;margin-top:6px;padding:9px 12px;border-radius:9px;}
+  .ans-row .rl{font-size:12px;color:var(--muted);font-weight:700;margin-right:6px;}
+  .ans-row.mine{background:#f8fafc;border:1px solid var(--border);} .ans-row.key{background:var(--purple-bg);border:1px solid var(--purple-soft);color:var(--purple-dark);}
+  .kw{font-size:12px;color:var(--muted);margin-top:6px;}
+  .review-note{background:var(--orange-bg);border:1px solid #f0dcb8;color:#a3640f;border-radius:12px;padding:14px 16px;font-size:13px;margin:6px 0 18px;}
+  @media print{ body{background:#fff;} .wrap{max-width:100%;padding:0;} .toast{display:none!important;}
+    body.graded .form-zone,body.graded .progress-wrap,body.graded #gradeRow{display:none!important;}
+    body.graded #results{display:block!important;} .header,.info-card,.q-card,.res-card,.sum-card,.res-header{box-shadow:none;}
+    .q-card,.res-card{break-inside:avoid;page-break-inside:avoid;} }
+  @media(max-width:620px){ .info-grid,.sum-grid{grid-template-columns:1fr;} .header h1{font-size:23px;} .btn{min-width:100%;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="form-zone">
+    <div class="header">
+      <div class="label">QUIZ</div><h1>퀴즈 시험</h1>
+      <div class="sub" id="dateStr"></div>
+      <div class="instr">※ 각 문항의 지시문을 읽고 답안을 작성하세요. 제출 시 자동 채점되며, <b>제출 후에는 답안을 수정할 수 없습니다.</b> 1~12번은 채점 대상(15점 만점), 13번은 추가 점수 문항입니다.</div>
+    </div>
+    <div class="info-card"><div class="ct">응답자 정보</div>
+      <div class="info-grid">
+        <div class="field"><label>학과</label><input id="dept" type="text" placeholder="학과"></div>
+        <div class="field"><label>학번</label><input id="sid" type="text" placeholder="학번"></div>
+        <div class="field"><label>이름</label><input id="name" type="text" placeholder="이름"></div>
+      </div>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-row"><span class="t">답안 작성 진행률</span><span class="c"><b id="cnt">0</b> / 13</span></div>
+    <div class="bar"><i id="barFill"></i></div>
+  </div>
+  <div id="quiz" class="form-zone"></div>
+  <div class="actions" id="gradeRow">
+    <button class="btn btn-submit" id="submitBtn" onclick="submitExam()">📤 제출하고 채점 결과 보기</button>
+  </div>
+  <div class="toast" id="toastTop"></div>
+  <div id="results"></div>
+  <div class="foot">퀴즈 시험 · 서버 채점 · 1~12번 15점 만점 (8·11번 2.5점) · 13번 추가점수</div>
+</div>
+
+<script>
+/* ===========================================================
+   ⚙️  아래 URL을 본인 Apps Script 웹앱 URL로 교체하세요.
+   (Code.gs 배포 후 받은 .../exec 로 끝나는 주소)
+   =========================================================== */
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvkcMO1HzD_hSJgxqaX8RwBIg7TNLT7Rx30S8TKCfTWzUT8Jd2FUhggdHy2QWQ9A/exec';
+
+/* 문항 데이터 (정답 미포함 — 채점은 서버에서) */
+const QUESTIONS = [
+  { num:1, type:'short', pts:1, instr:'<다음>이 설명하는 것은 무엇인지 적으세요.',
+    stem:'신경계를 구성하는 세포이며, 나트륨 통로·칼륨 통로 등의 이온 통로를 발현하여 다른 세포와는 달리 전기적인 방법으로 신호를 전달할 수 있다.' },
+  { num:2, type:'short', pts:1, instr:'<다음>이 설명하는 것은 무엇인지 적으세요.',
+    stem:'이것은 신경 세포 간 신호를 전달하는 연결 지점을 가리키는 것으로, 전기 자극이 화학 자극으로 변환되어 자극이 전달된다.' },
+  { num:3, type:'short', pts:1, instr:'<다음>과 관련이 높은 신경전달 물질의 이름을 적으시오.',
+    stem:'개인의 기분과 사회적 행동과 관련되어 있으며, 이것의 분비가 적으면 우울과 불안 수치가 올라갈 수 있다.' },
+  { num:4, type:'blank', pts:1, instr:'<다음>과 관련이 높은 신경전달 물질의 이름을 적고, 빈칸을 채우시오.',
+    stem_a:'본능적 보상(음식과 성생활 등의 선천적 보상)과 관련이 있으며, 약물 중독과 관련성이 높다. 최근 shorts 등 자극적인 영상물 시청과도 관련이 있다. 약물을 남용하게 되면 뇌의 ',
+    stem_b:' 수준이 증가하지만, 시간이 흘러 결국에는 ',
+    stem_c:' 를 둔감하게 만들어 약물 중독으로 발달할 수 있다.' },
+  { num:5, type:'long', pts:1, instr:'간략히 설명하시오.', stem:'편도체에 대해서 간략히 설명하시오.' },
+  { num:6, type:'short', pts:1, instr:'빈칸 (A)에 해당하는 것을 적으시오.',
+    stem:'청소년기는 발달 특성상 불안한 시기이다. 이를(청소년기의 불안정성) 뇌의 가지치기와 관련시켜 보면 (A)의 기능이 상대적으로 약화되기 때문이다. (A)는 무엇인가?' },
+  { num:7, type:'three', pts:1, instr:'순서대로 적으시오.', stem:'인간의 정보처리 과정(information process)을 표현하는 3단계를 적으시오.' },
+  { num:8, type:'long', pts:2.5, instr:'간략히 설명하시오.', stem:'chunking(청킹)에 대해서 간략히 설명하시오.' },
+  { num:9, type:'long', pts:1, instr:'간략히 설명하시오.', stem:'인출(retrieval) 실패와 망각(forgetting)의 차이점을 간략히 설명하시오.' },
+  { num:10, type:'long', pts:1, instr:'간략히 설명하시오.', stem:'초두효과(primacy effect)와 최신효과(recency effect)에 대해서 간략히 설명하시오.' },
+  { num:11, type:'long', pts:2.5, instr:'설명하시오.', stem:'고정관념을 설명하고, 정보처리과정에 있어서의 기능을 짧게 설명하세요.' },
+  { num:12, type:'multi', pts:1, instr:'해당하는 것을 모두 고르시오.', stem:'다음 중 맥락(context)과 관련된 것을 모두 고르시오.',
+    options:['외부 환경','개인 특성','정보 제시 상황과 정보 인출 상황의 일관성','되뇌기'] },
+  { num:13, type:'extra', pts:0, instr:'자유 서술 (Extra Score)',
+    stem:'본 퀴즈를 위하여 공부하였으나 출제되지 않은 것을 한 가지 선택해서 자유롭게 서술하시오.',
+    note:'※ 교수가 모르는 문제를 낸다면 만점 처리합니다.  ※ 추가 점수 문항이므로 답변하지 않아도 됩니다.' }
+];
+const MAX_SCORE = 15;
+
+const quizEl = document.getElementById('quiz');
+QUESTIONS.forEach(q=>{
+  const card=document.createElement('div'); card.className='q-card'+(q.type==='extra'?' extra':'');
+  let inner='';
+  if(q.type==='blank'){
+    inner=`<div class="ans-area"><div class="lab">관련 신경전달 물질 이름</div>
+      <input class="ans" data-q="${q.num}" data-key="main" type="text" placeholder="답을 입력하세요"></div>
+      <div class="q-stem" style="margin-top:14px;">${q.stem_a}<input class="inline-blank" data-q="${q.num}" data-key="b1">${q.stem_b}<input class="inline-blank" data-q="${q.num}" data-key="b2">${q.stem_c}</div>`;
+  } else if(q.type==='short'){ inner=`<div class="ans-area"><input class="ans" data-q="${q.num}" type="text" placeholder="답을 입력하세요"></div>`; }
+  else if(q.type==='long'){ inner=`<div class="ans-area"><textarea class="ans" data-q="${q.num}" placeholder="답을 입력하세요"></textarea></div>`; }
+  else if(q.type==='extra'){ inner=`<div class="ans-area"><textarea class="ans" data-q="${q.num}" placeholder="자유롭게 서술하세요 (선택)"></textarea></div>`; }
+  else if(q.type==='three'){ inner=`<div class="three-grid">
+      <div class="step"><input class="ans" data-q="${q.num}" data-key="s1" type="text" placeholder="1단계"></div><span class="arrow">→</span>
+      <div class="step"><input class="ans" data-q="${q.num}" data-key="s2" type="text" placeholder="2단계"></div><span class="arrow">→</span>
+      <div class="step"><input class="ans" data-q="${q.num}" data-key="s3" type="text" placeholder="3단계"></div></div>`; }
+  else if(q.type==='multi'){ inner=q.options.map((opt,i)=>`<label class="opt" onclick="toggleOpt(this)">
+      <input type="checkbox" class="ans" data-q="${q.num}" data-key="opt${i}" value="${i}"><span>${opt}</span></label>`).join(''); }
+  const typeLabel=q.type==='multi'?'객관식 (복수)':q.type==='extra'?'추가 점수':q.type==='long'?'서술형':q.type==='blank'?'단답+빈칸':'단답형';
+  card.innerHTML=`<div class="q-top"></div><div class="q-body">
+      <div class="q-head"><div class="q-num">${q.num}</div><div class="q-type">${typeLabel}</div>
+        ${q.type==='extra'?'<span class="badge-extra">EXTRA</span>':`<span class="q-pts">배점 ${q.pts}점</span>`}</div>
+      <div class="q-instr">${q.instr}</div>
+      ${q.type==='blank'?'':`<div class="q-stem">${q.stem}</div>`}
+      ${inner}
+      ${q.note?`<div class="q-instr" style="margin-top:12px;color:#a3640f;">${q.note}</div>`:''}
+    </div>`;
+  quizEl.appendChild(card);
+});
+document.getElementById('dateStr').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+
+function updateProgress(){
+  let answered=0;
+  QUESTIONS.forEach(q=>{ let has=false;
+    document.querySelectorAll(`[data-q="${q.num}"]`).forEach(f=>{ if(f.type==='checkbox'){if(f.checked)has=true;} else if(f.value.trim()!=='')has=true; });
+    if(has)answered++; });
+  document.getElementById('cnt').textContent=answered;
+  document.getElementById('barFill').style.width=(answered/QUESTIONS.length*100)+'%';
+}
+document.addEventListener('input',updateProgress); document.addEventListener('change',updateProgress);
+function toggleOpt(label){ setTimeout(()=>{ const cb=label.querySelector('input'); if(cb.disabled)return; label.classList.toggle('checked',cb.checked); updateProgress(); },0); }
+
+function val(q,key){ const el=key?document.querySelector(`[data-q="${q}"][data-key="${key}"]`):document.querySelector(`[data-q="${q}"]`); return el?el.value:''; }
+
+/* 내 답안 표시용 */
+function myAnswer(q){
+  if(q.type==='blank'){ return `[물질] ${val(q.num,'main').trim()||'-'} / [빈칸1] ${val(q.num,'b1').trim()||'-'} / [빈칸2] ${val(q.num,'b2').trim()||'-'}`; }
+  if(q.type==='three'){ return [val(q.num,'s1'),val(q.num,'s2'),val(q.num,'s3')].map(x=>x.trim()||'-').join(' → '); }
+  if(q.type==='multi'){ const c=[...document.querySelectorAll(`[data-q="${q.num}"]:checked`)].map(e=>q.options[parseInt(e.value)]); return c.length?c.join(', '):'(미선택)'; }
+  return val(q.num).trim()||'(미작성)';
+}
+
+/* 서버로 보낼 답안 수집 */
+function buildPayload(){
+  const responses={};
+  QUESTIONS.forEach(q=>{
+    if(q.type==='blank'){ responses[q.num]={main:val(q.num,'main'),b1:val(q.num,'b1'),b2:val(q.num,'b2')}; }
+    else if(q.type==='three'){ responses[q.num]=[val(q.num,'s1'),val(q.num,'s2'),val(q.num,'s3')]; }
+    else if(q.type==='multi'){ responses[q.num]=[...document.querySelectorAll(`[data-q="${q.num}"]:checked`)].map(e=>parseInt(e.value)); }
+    else { responses[q.num]=val(q.num); }
+  });
+  return {
+    학과:document.getElementById('dept').value.trim(),
+    학번:document.getElementById('sid').value.trim(),
+    이름:document.getElementById('name').value.trim(),
+    제출시각:new Date().toLocaleString('ko-KR'),
+    responses
+  };
+}
+
+function showToast(id,msg,type){ const t=document.getElementById(id); if(!t)return; t.textContent=msg; t.className='toast '+type; }
+
+async function submitExam(){
+  const p=buildPayload();
+  if(!p.이름 || !p.학번){ showToast('toastTop','학번과 이름을 입력해 주세요.','warn'); window.scrollTo({top:0,behavior:'smooth'}); return; }
+  if(GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')){ showToast('toastTop','⚠️ Apps Script URL이 설정되지 않았습니다. 코드 상단 GOOGLE_SCRIPT_URL을 교체해 주세요.','warn'); return; }
+  const btn=document.getElementById('submitBtn'); btn.disabled=true; btn.textContent='⏳ 채점 중...';
+  showToast('toastTop','제출하고 채점하는 중입니다...','ok');
+  try{
+    const res=await fetch(GOOGLE_SCRIPT_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(p) });
+    const data=await res.json();
+    if(!data || !data.ok) throw new Error(data && data.error ? data.error : '서버 응답 오류');
+    renderResults(data);
+  }catch(err){
+    btn.disabled=false; btn.textContent='📤 제출하고 채점 결과 보기';
+    showToast('toastTop','제출/채점 중 오류가 발생했습니다. 네트워크 또는 URL 설정을 확인하고 다시 시도해 주세요. ('+err.message+')','err');
+  }
+}
+
+function renderResults(data){
+  const band=data.band||'orange';
+  const colors=band==='green'?['var(--green-bg)','var(--green-dark)']:band==='red'?['var(--red-bg)','var(--red)']:['var(--orange-bg)','#a3640f'];
+  const colorFor=st=>st==='o'?'var(--green)':st==='x'?'var(--red)':'var(--orange)';
+  const markFor=st=>st==='o'?'<span class="mark o">정답</span>':st==='x'?'<span class="mark x">오답</span>':'<span class="mark t">검토 권장</span>';
+  const dept=document.getElementById('dept').value.trim(), sid=document.getElementById('sid').value.trim(), name=document.getElementById('name').value.trim();
+  const who=[name,sid&&`(${sid})`,dept].filter(Boolean).join(' ');
+
+  const cards=QUESTIONS.map(q=>{
+    const r=data.perq[q.num]||{status:'t',score:0,max:q.pts,extra:''};
+    const c=colorFor(r.status);
+    const scoreTxt=q.num===13?'추가점수':`${r.score} / ${r.max}점`;
+    const keyRow=r.model?`<div class="ans-row key"><span class="rl">${q.type==='long'?'모범답안':'정답'}</span>${r.model}</div>`:'';
+    return `<div class="res-card"><div class="rtop" style="background:${c}"></div><div class="rbody">
+        <div class="rhead"><div class="rnum" style="background:${c}">${q.num}</div>
+          <div class="rstem">${q.stem||q.instr}</div><div class="rscore" style="color:${c}">${scoreTxt}</div></div>
+        <div style="margin-bottom:6px;">${markFor(r.status)} ${r.extra?`<span class="kw">${r.extra}</span>`:''}</div>
+        <div class="ans-row mine"><span class="rl">내 답안</span>${myAnswer(q)}</div>
+        ${keyRow}
+      </div></div>`;
+  }).join('');
+
+  document.getElementById('results').innerHTML=`
+    <div class="res-header"><div class="label">QUIZ RESULT</div><h2>채점 결과 리포트</h2>
+      <div class="sub">${who||'응답자'} · ${new Date().toLocaleDateString('ko-KR')}</div></div>
+    <div class="sum-grid">
+      <div class="sum-card total" style="border-color:${colors[1]}"><div class="k">총점</div>
+        <div class="v" style="color:${colors[1]}">${data.total}<span class="vs"> / ${MAX_SCORE}</span></div>
+        <span class="grade" style="background:${colors[0]};color:${colors[1]}">${data.grade}</span></div>
+      <div class="sum-card"><div class="k">객관식·단답 정답</div><div class="v">${data.objCorrect}<span class="vs"> / ${data.objTotal}</span></div></div>
+      <div class="sum-card"><div class="k">서술형 점수</div><div class="v">${data.essayScore}<span class="vs"> 점</span></div></div>
+    </div>
+    <div class="review-note">⚠️ <b>서술형(5·8·9·10·11번)</b>은 핵심 개념어 기반 자동 채점 결과로, 교수님의 최종 검토를 권장합니다. 13번은 추가 점수로 점수에 포함되지 않습니다. 제출이 완료되어 답안은 잠겼습니다.</div>
+    ${cards}
+    <div class="toast ok" style="display:block;">✅ 제출이 완료되어 결과가 기록되었습니다.</div>`;
+
+  document.body.classList.add('graded');
+  document.getElementById('results').style.display='block';
+  document.querySelectorAll('.form-zone input, .form-zone textarea').forEach(el=>{ el.disabled=true; });
+  document.querySelectorAll('.opt').forEach(el=>{ el.style.pointerEvents='none'; el.style.opacity='.85'; });
+  document.getElementById('gradeRow').style.display='none';
+  document.getElementById('toastTop').className='toast';
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+
+updateProgress();
+</script>
+</body>
+</html>
